@@ -1,0 +1,7 @@
+{
+  "name": "AI Meeting Notetaker",
+  "description": "A simple web app to record audio, transcribe it to text, and translate it in real-time. Perfect for multi-lingual meetings.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}

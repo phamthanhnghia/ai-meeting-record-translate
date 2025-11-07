@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Meeting Notetaker</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* Custom animation for recording pulse */
+    @keyframes pulse-ring {
+      0% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+      }
+      70% {
+        transform: scale(1);
+        box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
+      }
+      100% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+      }
+    }
+    .recording {
+      animation: pulse-ring 1.5s infinite;
+    }
+  </style>
+<script type="importmap">
+{
+  "imports": {
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.29.0",
+    "@angular/forms": "https://aistudiocdn.com/@angular/forms@^20.3.10",
+    "@angular/core": "https://aistudiocdn.com/@angular/core@^20.3.10",
+    "@angular/platform-browser": "https://aistudiocdn.com/@angular/platform-browser@^20.3.10",
+    "@angular/common": "https://aistudiocdn.com/@angular/common@^20.3.10",
+    "@angular/compiler": "https://aistudiocdn.com/@angular/compiler@^20.3.10"
+  }
+}
+</script>
+</head>
+<body class="bg-gray-900 text-white font-sans">
+  <app-root></app-root>
+</body>
+</html>
