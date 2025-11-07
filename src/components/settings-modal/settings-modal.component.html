@@ -4,8 +4,8 @@
   <div class="fixed inset-0 bg-black/60 z-40 animate-fade-in-fast" (click)="onClose()"></div>
   
   <!-- Modal Panel -->
-  <div class="fixed inset-0 z-50 flex items-center justify-center p-4" (click)="onClose()">
-    <div class="bg-gray-800 rounded-2xl shadow-2xl shadow-cyan-500/10 w-full max-w-md animate-slide-in-up" (click)="$event.stopPropagation()">
+  <div class="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto" (click)="onClose()">
+    <div class="bg-gray-800 rounded-2xl shadow-2xl shadow-cyan-500/10 w-full max-w-md my-8 animate-slide-in-up" (click)="$event.stopPropagation()">
       
       <!-- Header -->
       <div class="flex items-center justify-between p-4 border-b border-gray-700">
@@ -18,29 +18,93 @@
       </div>
       
       <!-- Body -->
-      <div class="p-6 space-y-6">
-        <div>
-          <h3 class="text-lg font-medium text-cyan-400">AI Model Configuration</h3>
-          <p class="text-sm text-gray-400 mt-1">Select a model for translation or provide a custom model name.</p>
-        </div>
+      <div class="p-6 space-y-6 max-h-[70vh] overflow-y-auto">
         
-        <div class="space-y-2">
-            <label for="model-select" class="block text-sm font-medium text-gray-300">Translation Model</label>
-            <select id="model-select" (change)="onModelSelectionChange($event)" class="w-full bg-gray-700 border-gray-600 text-white rounded-lg p-2.5 focus:ring-cyan-500 focus:border-cyan-500">
-                @for(model of settingsService.availableModels; track model.id) {
-                    <option [value]="model.id" [selected]="settingsService.activeModel() === model.id && !isCustomModelActive()">{{ model.name }}</option>
-                }
-                <option value="custom" [selected]="isCustomModelActive()">Custom model...</option>
-            </select>
+        <!-- API Provider Selection -->
+        <div>
+          <h3 class="text-lg font-medium text-cyan-400 mb-4">AI Provider</h3>
+          <div class="space-y-2">
+            @for(provider of settingsService.availableProviders; track provider.id) {
+              <label class="flex items-center p-3 border border-gray-600 rounded-lg cursor-pointer hover:bg-gray-700/50 transition-colors" [class.bg-cyan-500/10]="settingsService.activeProvider() === provider.id">
+                <input type="radio" name="provider" [value]="provider.id" 
+                  [checked]="settingsService.activeProvider() === provider.id"
+                  (change)="onProviderChange(provider.id)" class="w-4 h-4">
+                <span class="ml-3 flex-1 text-white font-medium">{{ provider.name }}</span>
+              </label>
+            }
+          </div>
         </div>
 
-        @if (isCustomModelActive()) {
-            <div class="space-y-2 animate-fade-in">
-                <label for="custom-model-input" class="block text-sm font-medium text-gray-300">Custom Model Name</label>
-                <input id="custom-model-input" type="text" [value]="settingsService.activeModel()" (input)="onCustomModelChange($event)" placeholder="e.g. models/gemini-1.5-pro-latest" class="w-full bg-gray-700 border-gray-600 text-white rounded-lg p-2.5 focus:ring-cyan-500 focus:border-cyan-500">
-                <p class="text-xs text-gray-500">Note: The custom model must be compatible with the Google AI API and your API key permissions.</p>
+        <!-- API Key Configuration -->
+        <div class="border-t border-gray-700 pt-6">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-medium text-cyan-400">API Configuration</h3>
+            <button (click)="toggleApiKeyInput()" class="text-xs px-3 py-1 bg-gray-700 hover:bg-gray-600 rounded text-gray-300 transition-colors">
+              {{ showApiKeyInput() ? 'Hide' : 'Configure' }}
+            </button>
+          </div>
+
+          @if(showApiKeyInput()) {
+            <div class="space-y-4 p-4 bg-gray-700/30 rounded-lg animate-fade-in">
+              @for(provider of settingsService.availableProviders; track provider.id) {
+                <div class="space-y-2">
+                  <label [for]="'api-key-' + provider.id" class="block text-sm font-medium text-gray-300">
+                    {{ provider.name }} API Key
+                  </label>
+                  <input 
+                    [id]="'api-key-' + provider.id" 
+                    type="password" 
+                    placeholder="Enter your API key"
+                    [value]="settingsService.getApiKey(provider.id)"
+                    (input)="onApiKeyChange(provider.id, $event)"
+                    class="w-full bg-gray-600 border border-gray-500 text-white rounded-lg p-2.5 focus:ring-cyan-500 focus:border-cyan-500 text-sm">
+                  <p class="text-xs text-gray-400">Your API key is stored locally and never sent to external servers.</p>
+                </div>
+              }
             </div>
-        }
+          } @else {
+            <div class="space-y-2">
+              @for(provider of settingsService.availableProviders; track provider.id) {
+                <div class="flex items-center justify-between p-3 bg-gray-700/50 rounded-lg">
+                  <span class="text-sm text-gray-400">{{ provider.name }}:</span>
+                  <span class="text-sm font-mono text-cyan-400">{{ getApiKeyDisplay(provider.id) }}</span>
+                </div>
+              }
+            </div>
+          }
+        </div>
+
+        <!-- Model Selection -->
+        <div class="border-t border-gray-700 pt-6">
+          <h3 class="text-lg font-medium text-cyan-400 mb-4">Translation Model</h3>
+          <p class="text-sm text-gray-400 mb-3">Select a model or provide a custom model name.</p>
+          
+          <div class="space-y-2">
+            <label for="model-select" class="block text-sm font-medium text-gray-300">Model</label>
+            <select id="model-select" (change)="onModelSelectionChange($event)" 
+              class="w-full bg-gray-700 border border-gray-600 text-white rounded-lg p-2.5 focus:ring-cyan-500 focus:border-cyan-500">
+              @for(model of settingsService.availableModels; track model.id) {
+                <option [value]="model.id" [selected]="settingsService.activeModel() === model.id && !isCustomModelActive()">
+                  {{ model.name }}
+                </option>
+              }
+              <option value="custom" [selected]="isCustomModelActive()">Custom model...</option>
+            </select>
+          </div>
+
+          @if(isCustomModelActive()) {
+            <div class="space-y-2 mt-4 p-4 bg-gray-700/30 rounded-lg animate-fade-in">
+              <label for="custom-model-input" class="block text-sm font-medium text-gray-300">Custom Model Name</label>
+              <input id="custom-model-input" type="text" 
+                [value]="settingsService.activeModel()" 
+                (input)="onCustomModelChange($event)" 
+                placeholder="e.g. models/gemini-1.5-pro-latest or gpt-4o or claude-3-opus"
+                class="w-full bg-gray-600 border border-gray-500 text-white rounded-lg p-2.5 focus:ring-cyan-500 focus:border-cyan-500">
+              <p class="text-xs text-gray-500">Note: Use the exact model identifier from your chosen provider's documentation.</p>
+            </div>
+          }
+        </div>
+
       </div>
       
       <!-- Footer -->

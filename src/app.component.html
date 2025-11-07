@@ -1,5 +1,5 @@
 <div class="bg-gray-900 min-h-screen text-white flex flex-col items-center p-4 sm:p-8 font-sans">
-    <app-header (settingsClicked)="isSettingsOpen.set(true)"></app-header>
+    <app-header (settingsClicked)="isSettingsOpen.set(true)" class="w-full max-w-5xl flex flex-col"></app-header>
 
     <main class="w-full max-w-5xl bg-gray-800 rounded-2xl shadow-2xl shadow-cyan-500/10 p-6 sm:p-8 flex flex-col">
         <app-language-selector [languages]="languages" [optionalLanguages]="optionalLanguages"

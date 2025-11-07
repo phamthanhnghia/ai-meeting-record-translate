@@ -1,7 +1,6 @@
-// FIX: Replaced placeholder content with a fully functional standalone Angular component.
 import { Component, ChangeDetectionStrategy, signal, inject, computed, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { GeminiService } from './services/gemini.service';
+import { TranslationService } from './services/translation.service';
 import { AudioRecordingService } from './services/audio-recording.service';
 import { HeaderComponent } from './components/header/header.component';
 import { LanguageSelectorComponent } from './components/language-selector/language-selector.component';
@@ -36,7 +35,7 @@ interface Transcript {
   styleUrls: ['./app.component.css'],
 })
 export class AppComponent {
-  private geminiService = inject(GeminiService);
+  private translationService = inject(TranslationService);
   private audioRecordingService = inject(AudioRecordingService);
   
   languages: Language[] = [
@@ -115,7 +114,7 @@ export class AppComponent {
     console.log(`Processing new transcript: "${text}"`);
     
     const translationPromises = [
-      this.geminiService.translateText(text, this.sourceLang().name, primaryTarget.name).catch(e => {
+      this.translationService.translateText(text, this.sourceLang().name, primaryTarget.name).catch(e => {
           console.error(`Primary translation failed for "${text}"`, e);
           this.error.set(e instanceof Error ? e.message : 'An unknown translation error occurred.');
           return 'Error'; // Return error string on failure
@@ -124,7 +123,7 @@ export class AppComponent {
 
     if (secondaryTarget) {
       translationPromises.push(
-        this.geminiService.translateText(text, this.sourceLang().name, secondaryTarget.name).catch(e => {
+        this.translationService.translateText(text, this.sourceLang().name, secondaryTarget.name).catch(e => {
             console.error(`Secondary translation failed for "${text}"`, e);
             // Don't set the main error for the secondary translation to avoid being too noisy
             return 'Error'; // Return error string on failure

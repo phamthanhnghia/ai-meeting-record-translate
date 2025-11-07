@@ -1,47 +1,59 @@
-import { Component, ChangeDetectionStrategy, Input, Output, EventEmitter, signal, computed, inject } from '@angular/core';
+import { Component, ChangeDetectionStrategy, Input, Output, EventEmitter, signal, computed, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { SettingsService } from '@/services/settings.service';
 
 @Component({
   selector: 'app-settings-modal',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   providers: [SettingsService],
   templateUrl: './settings-modal.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class SettingsModalComponent {
+export class SettingsModalComponent implements OnInit {
   @Input({ required: true }) isOpen!: boolean;
   @Output() close = new EventEmitter<void>();
 
   settingsService = inject(SettingsService);
 
-  // A signal to hold the value of the custom model input temporarily when 'Custom...' is selected.
-  private customModelInputValue = signal('');
+  readonly customModelInputValue = signal('');
+  readonly apiKeyInputs = signal<Record<string, string>>({
+    gemini: '',
+    openai: '',
+    anthropic: '',
+  });
 
-  // Determines if the custom model option is the active one.
+  showApiKeyInput = signal(false);
+
   isCustomModelActive = computed(() => {
     const active = this.settingsService.activeModel();
-    return !this.settingsService.availableModels.some(m => m.id === active);
+    const models = this.settingsService.availableModels;
+    return !models.some(m => m.id === active);
   });
 
   ngOnInit() {
-    // When component initializes, if the active model is custom,
-    // populate the temporary input value signal.
     if (this.isCustomModelActive()) {
       this.customModelInputValue.set(this.settingsService.activeModel());
     }
+    
+    // Load existing API keys
+    const currentKeys = this.settingsService.apiKeys();
+    this.apiKeyInputs.set({ ...currentKeys });
+  }
+
+  onProviderChange(provider: 'gemini' | 'openai' | 'anthropic' | 'custom') {
+    this.settingsService.setProvider(provider);
+    this.customModelInputValue.set('');
   }
 
   onModelSelectionChange(event: Event) {
     const selectedValue = (event.target as HTMLSelectElement).value;
     if (selectedValue === 'custom') {
-      // When user selects 'Custom...', switch to it.
-      // If there's already a custom value, use it, otherwise use an empty string to let them type.
-      this.settingsService.activeModel.set(this.customModelInputValue());
+      this.customModelInputValue.set('');
     } else {
-      // Switch to a pre-defined model
       this.settingsService.activeModel.set(selectedValue);
+      this.customModelInputValue.set('');
     }
   }
 
@@ -49,6 +61,20 @@ export class SettingsModalComponent {
     const customModelName = (event.target as HTMLInputElement).value;
     this.customModelInputValue.set(customModelName);
     this.settingsService.activeModel.set(customModelName);
+  }
+
+  onApiKeyChange(provider: string, event: Event) {
+    const value = (event.target as HTMLInputElement).value;
+    this.settingsService.setApiKey(provider, value);
+  }
+
+  toggleApiKeyInput() {
+    this.showApiKeyInput.update(v => !v);
+  }
+
+  getApiKeyDisplay(provider: string): string {
+    const key = this.settingsService.getApiKey(provider);
+    return key ? `••••${key.slice(-4)}` : 'Not set';
   }
 
   onClose() {
