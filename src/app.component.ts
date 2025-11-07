@@ -2,6 +2,7 @@
 import { Component, ChangeDetectionStrategy, signal, inject, computed, effect } from '@angular/core';
 import { GeminiService } from './services/gemini.service';
 import { AudioRecordingService } from './services/audio-recording.service';
+import { SettingsService } from './services/settings.service';
 
 interface Language {
   name: string;
@@ -25,9 +26,16 @@ interface Transcript {
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="bg-gray-900 min-h-screen text-white flex flex-col items-center p-4 sm:p-8 font-sans">
-      <header class="w-full max-w-5xl text-center mb-8">
+      <header class="w-full max-w-5xl text-center mb-8 relative">
         <h1 class="text-4xl sm:text-5xl font-bold text-cyan-400">AI Meeting Notetaker</h1>
         <p class="text-gray-400 mt-2">Record and translate conversations in real-time.</p>
+        <!-- Settings Button -->
+        <button (click)="isSettingsOpen.set(true)" title="Open Settings" class="absolute top-0 right-0 p-2 rounded-full text-gray-400 hover:bg-gray-700 hover:text-white transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+        </button>
       </header>
 
       <main class="w-full max-w-5xl bg-gray-800 rounded-2xl shadow-2xl shadow-cyan-500/10 p-6 sm:p-8 flex flex-col">
@@ -179,12 +187,65 @@ interface Transcript {
           </div>
         }
       </main>
+
+      <!-- Settings Modal -->
+      @if(isSettingsOpen()) {
+        <!-- Backdrop -->
+        <div class="fixed inset-0 bg-black/60 z-40 animate-fade-in-fast" (click)="isSettingsOpen.set(false)"></div>
+        
+        <!-- Modal Panel -->
+        <div class="fixed inset-0 z-50 flex items-center justify-center p-4" (click)="isSettingsOpen.set(false)">
+          <div class="bg-gray-800 rounded-2xl shadow-2xl shadow-cyan-500/10 w-full max-w-md animate-slide-in-up" (click)="$event.stopPropagation()">
+            
+            <!-- Header -->
+            <div class="flex items-center justify-between p-4 border-b border-gray-700">
+              <h2 class="text-xl font-semibold text-white">Settings</h2>
+              <button (click)="isSettingsOpen.set(false)" title="Close Settings" class="p-1 rounded-full text-gray-400 hover:bg-gray-700 hover:text-white transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            <!-- Body -->
+            <div class="p-6 space-y-6">
+              <div>
+                <h3 class="text-lg font-medium text-cyan-400">AI Model Configuration</h3>
+                <p class="text-sm text-gray-400 mt-1">Select a model for translation or provide a custom model name.</p>
+              </div>
+              
+              <div class="space-y-2">
+                  <label for="model-select" class="block text-sm font-medium text-gray-300">Translation Model</label>
+                  <select id="model-select" (change)="onModelSelectionChange($event)" class="w-full bg-gray-700 border-gray-600 text-white rounded-lg p-2.5 focus:ring-cyan-500 focus:border-cyan-500">
+                      @for(model of settingsService.availableModels; track model.id) {
+                          <option [value]="model.id" [selected]="settingsService.activeModel() === model.id && !isCustomModelActive()">{{ model.name }}</option>
+                      }
+                      <option value="custom" [selected]="isCustomModelActive()">Custom model...</option>
+                  </select>
+              </div>
+
+              @if (isCustomModelActive()) {
+                  <div class="space-y-2 animate-fade-in">
+                      <label for="custom-model-input" class="block text-sm font-medium text-gray-300">Custom Model Name</label>
+                      <input id="custom-model-input" type="text" [value]="settingsService.activeModel()" (input)="onCustomModelChange($event)" placeholder="e.g. models/gemini-1.5-pro-latest" class="w-full bg-gray-700 border-gray-600 text-white rounded-lg p-2.5 focus:ring-cyan-500 focus:border-cyan-500">
+                      <p class="text-xs text-gray-500">Note: The custom model must be compatible with the Google AI API and your API key permissions.</p>
+                  </div>
+              }
+            </div>
+            
+            <!-- Footer -->
+            <div class="flex justify-end p-4 bg-gray-800 border-t border-gray-700 rounded-b-2xl">
+              <button (click)="isSettingsOpen.set(false)" class="px-5 py-2 bg-cyan-600 hover:bg-cyan-700 rounded-lg text-white font-semibold transition-colors">Done</button>
+            </div>
+          </div>
+        </div>
+      }
     </div>
   `,
   styles: [
     `
       /* Custom focus styles to match the theme */
-      select:focus, textarea:focus {
+      select:focus, textarea:focus, input:focus {
         outline: none;
         box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.4); /* cyan-400 with opacity */
       }
@@ -195,6 +256,21 @@ interface Transcript {
       }
       .animate-fade-in {
         animation: fade-in 0.5s ease-out forwards;
+      }
+      /* Animation for modal fade in and slide up */
+      @keyframes fade-in-fast {
+          from { opacity: 0; }
+          to { opacity: 1; }
+      }
+      .animate-fade-in-fast {
+          animation: fade-in-fast 0.2s ease-out forwards;
+      }
+      @keyframes slide-in-up {
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
+      }
+      .animate-slide-in-up {
+          animation: slide-in-up 0.3s ease-out forwards;
       }
     `
   ],
@@ -233,8 +309,27 @@ export class AppComponent {
   isRecording = this.audioRecordingService.isRecording;
   isRecordingUnsupported = computed(() => this.audioRecordingService.error()?.includes('not supported'));
   isTranscriptListEmpty = computed(() => this.transcripts().length === 0);
+
+  // --- Settings --- //
+  settingsService = inject(SettingsService);
+  isSettingsOpen = signal(false);
+
+  // A signal to hold the value of the custom model input temporarily when 'Custom...' is selected.
+  private customModelInputValue = signal('');
+
+  // Determines if the custom model option is the active one.
+  isCustomModelActive = computed(() => {
+    const active = this.settingsService.activeModel();
+    return !this.settingsService.availableModels.some(m => m.id === active);
+  });
   
   constructor() {
+    // When component initializes, if the active model is custom,
+    // populate the temporary input value signal.
+    if (this.isCustomModelActive()) {
+      this.customModelInputValue.set(this.settingsService.activeModel());
+    }
+
     // Effect to handle new transcribed sentences from audio service
     effect(() => {
       const newTranscriptText = this.audioRecordingService.transcribedText().trim();
@@ -253,6 +348,7 @@ export class AppComponent {
   }
 
   async processNewTranscript(text: string) {
+    this.error.set(null); // Clear previous errors
     const newId = this.transcriptIdCounter++;
     const primaryTarget = this.targetLang();
     const secondaryTarget = this.secondaryTargetLang(); // Capture at creation time
@@ -275,6 +371,7 @@ export class AppComponent {
     const translationPromises = [
       this.geminiService.translateText(text, this.sourceLang().name, primaryTarget.name).catch(e => {
           console.error(`Primary translation failed for "${text}"`, e);
+          this.error.set(e instanceof Error ? e.message : 'An unknown translation error occurred.');
           return 'Error'; // Return error string on failure
       })
     ];
@@ -283,6 +380,7 @@ export class AppComponent {
       translationPromises.push(
         this.geminiService.translateText(text, this.sourceLang().name, secondaryTarget.name).catch(e => {
             console.error(`Secondary translation failed for "${text}"`, e);
+            // Don't set the main error for the secondary translation to avoid being too noisy
             return 'Error'; // Return error string on failure
         })
       );
@@ -307,7 +405,6 @@ export class AppComponent {
       })
     );
   }
-
 
   setSourceLang(event: Event) {
     const langName = (event.target as HTMLSelectElement).value;
@@ -419,5 +516,25 @@ export class AppComponent {
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
     }
+  }
+
+  //--- Settings Modal Methods ---//
+
+  onModelSelectionChange(event: Event) {
+    const selectedValue = (event.target as HTMLSelectElement).value;
+    if (selectedValue === 'custom') {
+      // When user selects 'Custom...', switch to it.
+      // If there's already a custom value, use it, otherwise use an empty string to let them type.
+      this.settingsService.activeModel.set(this.customModelInputValue());
+    } else {
+      // Switch to a pre-defined model
+      this.settingsService.activeModel.set(selectedValue);
+    }
+  }
+
+  onCustomModelChange(event: Event) {
+    const customModelName = (event.target as HTMLInputElement).value;
+    this.customModelInputValue.set(customModelName);
+    this.settingsService.activeModel.set(customModelName);
   }
 }
