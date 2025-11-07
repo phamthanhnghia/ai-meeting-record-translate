@@ -1,0 +1,56 @@
+/* Custom focus styles to match the theme */
+select:focus,
+textarea:focus,
+input:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.4);
+    /* cyan-400 with opacity */
+}
+
+/* Animation for new transcript entries */
+@keyframes fade-in {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-fade-in {
+    animation: fade-in 0.5s ease-out forwards;
+}
+
+/* Animation for modal fade in and slide up */
+@keyframes fade-in-fast {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+.animate-fade-in-fast {
+    animation: fade-in-fast 0.2s ease-out forwards;
+}
+
+@keyframes slide-in-up {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-slide-in-up {
+    animation: slide-in-up 0.3s ease-out forwards;
+}
