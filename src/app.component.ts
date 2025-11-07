@@ -1,8 +1,14 @@
 // FIX: Replaced placeholder content with a fully functional standalone Angular component.
 import { Component, ChangeDetectionStrategy, signal, inject, computed, effect } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { GeminiService } from './services/gemini.service';
 import { AudioRecordingService } from './services/audio-recording.service';
-import { SettingsService } from './services/settings.service';
+import { HeaderComponent } from './components/header/header.component';
+import { LanguageSelectorComponent } from './components/language-selector/language-selector.component';
+import { RecordingControlComponent } from './components/recording-control/recording-control.component';
+import { ActionButtonsComponent } from './components/action-buttons/action-buttons.component';
+import { TranscriptListComponent } from './components/transcript-list/transcript-list.component';
+import { SettingsModalComponent } from './components/settings-modal/settings-modal.component';
 
 interface Language {
   name: string;
@@ -24,161 +30,43 @@ interface Transcript {
 @Component({
   selector: 'app-root',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true,
+  imports: [CommonModule, HeaderComponent, LanguageSelectorComponent, RecordingControlComponent, ActionButtonsComponent, TranscriptListComponent, SettingsModalComponent],
   template: `
     <div class="bg-gray-900 min-h-screen text-white flex flex-col items-center p-4 sm:p-8 font-sans">
-      <header class="w-full max-w-5xl text-center mb-8 relative">
-        <h1 class="text-4xl sm:text-5xl font-bold text-cyan-400">AI Meeting Notetaker</h1>
-        <p class="text-gray-400 mt-2">Record and translate conversations in real-time.</p>
-        <!-- Settings Button -->
-        <button (click)="isSettingsOpen.set(true)" title="Open Settings" class="absolute top-0 right-0 p-2 rounded-full text-gray-400 hover:bg-gray-700 hover:text-white transition-colors">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-            </svg>
-        </button>
-      </header>
+      <app-header (settingsClicked)="isSettingsOpen.set(true)"></app-header>
 
       <main class="w-full max-w-5xl bg-gray-800 rounded-2xl shadow-2xl shadow-cyan-500/10 p-6 sm:p-8 flex flex-col">
-        <!-- Language Selection -->
-        <div class="flex flex-col items-center justify-between mb-6 gap-4">
-          <div class="w-full flex flex-col sm:flex-row items-center justify-between gap-4">
-              <div class="w-full sm:w-5/12">
-                <label for="source-lang" class="block text-sm font-medium text-gray-300 mb-1">From (Spoken)</label>
-                <select id="source-lang" [value]="sourceLang().name" (change)="setSourceLang($event)" class="w-full bg-gray-700 border-gray-600 text-white rounded-lg p-2.5 focus:ring-cyan-500 focus:border-cyan-500">
-                  @for (lang of languages; track lang.code) {
-                    <option [value]="lang.name">{{ lang.name }}</option>
-                  }
-                </select>
-              </div>
-              
-              <button (click)="swapLanguages()" class="p-2 rounded-full bg-gray-700 hover:bg-cyan-600 transition-transform duration-300 transform sm:mt-6 rotate-90 sm:rotate-0">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-                </svg>
-              </button>
-              
-              <div class="w-full sm:w-5/12">
-                <label for="target-lang" class="block text-sm font-medium text-gray-300 mb-1">To (Translated)</label>
-                <select id="target-lang" [value]="targetLang().name" (change)="setTargetLang($event)" class="w-full bg-gray-700 border-gray-600 text-white rounded-lg p-2.5 focus:ring-cyan-500 focus:border-cyan-500">
-                  @for (lang of languages; track lang.code) {
-                    <option [value]="lang.name">{{ lang.name }}</option>
-                  }
-                </select>
-              </div>
-          </div>
-          <!-- Optional Secondary Language -->
-            <div class="mt-4 w-full sm:w-1/2">
-                <label for="secondary-target-lang" class="block text-sm font-medium text-gray-300 mb-1">
-                    Also Translate To (Optional)
-                </label>
-                <select id="secondary-target-lang" (change)="setSecondaryTargetLang($event)" class="w-full bg-gray-700 border-gray-600 text-white rounded-lg p-2.5 focus:ring-cyan-500 focus:border-cyan-500">
-                    @for (lang of optionalLanguages; track lang.code) {
-                        <option [value]="lang.name" [selected]="secondaryTargetLang()?.name === lang.name">{{ lang.name }}</option>
-                    }
-                </select>
-            </div>
-        </div>
+        <app-language-selector
+          [languages]="languages"
+          [optionalLanguages]="optionalLanguages"
+          [sourceLang]="sourceLang()"
+          [targetLang]="targetLang()"
+          [secondaryTargetLang]="secondaryTargetLang()"
+          (sourceLangChange)="setSourceLang($event)"
+          (targetLangChange)="setTargetLang($event)"
+          (secondaryTargetLangChange)="setSecondaryTargetLang($event)"
+          (swapLanguagesEvent)="swapLanguages()"
+        ></app-language-selector>
 
-        <!-- Recording Control -->
-        <div class="my-8 flex flex-col items-center justify-center">
-            <button 
-                (click)="toggleRecording()" 
-                [class]="'w-24 h-24 rounded-full flex items-center justify-center text-white transition-all duration-300 ' + (isRecording() ? 'bg-red-600 hover:bg-red-700 recording' : 'bg-cyan-600 hover:bg-cyan-700')" 
-                [disabled]="isRecordingUnsupported()">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    @if(isRecording()) {
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 10h6" />
-                    } @else {
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-14 0m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
-                    }
-                </svg>
-            </button>
-            <p class="mt-4 text-gray-400 h-5">
-                @if(isRecording()) {
-                    <span>Recording... Click icon to stop.</span>
-                } @else if (isRecordingUnsupported()) {
-                    <span class="text-red-400">Recording not supported on this browser.</span>
-                } @else {
-                    <span>Click the microphone to start recording.</span>
-                }
-            </p>
-        </div>
+        <app-recording-control
+          [isRecording]="isRecording()"
+          [isRecordingUnsupported]="isRecordingUnsupported()"
+          (toggleRecordingEvent)="toggleRecording()"
+        ></app-recording-control>
 
-        <!-- Action Buttons -->
-        <div class="mt-4 flex justify-end items-center gap-3 border-t border-gray-700 pt-4 mb-4">
-            <button
-                (click)="downloadTranscripts()"
-                [disabled]="isTranscriptListEmpty()"
-                [class]="'flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-colors ' + (isTranscriptListEmpty() ? 'bg-gray-600 text-gray-400 cursor-not-allowed' : 'bg-sky-600 hover:bg-sky-700 text-white')">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                  <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
-                </svg>
-                <span>Download</span>
-            </button>
-            <button
-                (click)="clearTranscripts()"
-                [disabled]="isTranscriptListEmpty()"
-                [class]="'flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-colors ' + (isTranscriptListEmpty() ? 'bg-gray-600 text-gray-400 cursor-not-allowed' : 'bg-red-600 hover:bg-red-700 text-white')">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                  <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clip-rule="evenodd" />
-                </svg>
-                <span>Clear</span>
-            </button>
-        </div>
+        <app-action-buttons
+          [isTranscriptListEmpty]="isTranscriptListEmpty()"
+          (downloadTranscriptsEvent)="downloadTranscripts()"
+          (clearTranscriptsEvent)="clearTranscripts()"
+        ></app-action-buttons>
 
-        <!-- Transcript History -->
-        <div class="w-full space-y-4 h-96 overflow-y-auto pr-2">
-          @for (transcript of transcripts(); track transcript.id) {
-            <div class="bg-gray-700/50 p-4 rounded-lg animate-fade-in space-y-3">
-               <p class="text-xs text-gray-400 font-mono">{{ transcript.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }}</p>
-               <div [class]="'grid grid-cols-1 gap-4 ' + (transcript.secondaryTargetLang ? 'md:grid-cols-3' : 'md:grid-cols-2')">
-                  <!-- Source Text -->
-                  <div class="flex items-start gap-3">
-                    <span class="text-cyan-400 font-bold text-sm mt-1 flex-shrink-0">{{ sourceLang().code.split('-')[0].toUpperCase() }}:</span>
-                    <p class="text-gray-200">{{ transcript.source }}</p>
-                  </div>
-                  <!-- Primary Translated Text -->
-                  <div class="flex items-start gap-3 border-t border-gray-600 pt-4 md:border-t-0 md:border-l md:pl-4 md:pt-0">
-                    <span class="text-lime-400 font-bold text-sm mt-1 flex-shrink-0">{{ targetLang().code.split('-')[0].toUpperCase() }}:</span>
-                    @if (transcript.isTranslatingPrimary) {
-                      <div class="flex items-center gap-2 text-gray-400 pt-1">
-                        <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-300"></div>
-                        <span>Translating...</span>
-                      </div>
-                    } @else {
-                      <p class="text-gray-200">{{ transcript.primaryTranslation }}</p>
-                    }
-                  </div>
-                   <!-- Secondary Translated Text -->
-                    @if (transcript.secondaryTargetLang) {
-                        <div class="flex items-start gap-3 border-t border-gray-600 pt-4 md:border-t-0 md:border-l md:pl-4 md:pt-0">
-                            <span class="text-yellow-400 font-bold text-sm mt-1 flex-shrink-0">{{ transcript.secondaryTargetLang.code.split('-')[0].toUpperCase() }}:</span>
-                            @if (transcript.isTranslatingSecondary) {
-                            <div class="flex items-center gap-2 text-gray-400 pt-1">
-                                <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-300"></div>
-                                <span>Translating...</span>
-                            </div>
-                            } @else {
-                            <p class="text-gray-200">{{ transcript.secondaryTranslation }}</p>
-                            }
-                        </div>
-                    }
-               </div>
-            </div>
-          } @empty {
-            @if (!isRecording()) {
-              <div class="text-center py-12 text-gray-500">
-                <svg xmlns="http://www.w3.org/2000/svg" class="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2" />
-                </svg>
-                <p class="mt-4 text-lg">Your translated notes will appear here.</p>
-                <p>Click the microphone above to begin.</p>
-              </div>
-            }
-          }
-        </div>
+        <app-transcript-list
+          [transcripts]="transcripts()"
+          [sourceLang]="sourceLang()"
+          [targetLang]="targetLang()"
+          [isRecording]="isRecording()"
+        ></app-transcript-list>
 
         <!-- Error Display -->
         @if(error()) {
@@ -188,58 +76,10 @@ interface Transcript {
         }
       </main>
 
-      <!-- Settings Modal -->
-      @if(isSettingsOpen()) {
-        <!-- Backdrop -->
-        <div class="fixed inset-0 bg-black/60 z-40 animate-fade-in-fast" (click)="isSettingsOpen.set(false)"></div>
-        
-        <!-- Modal Panel -->
-        <div class="fixed inset-0 z-50 flex items-center justify-center p-4" (click)="isSettingsOpen.set(false)">
-          <div class="bg-gray-800 rounded-2xl shadow-2xl shadow-cyan-500/10 w-full max-w-md animate-slide-in-up" (click)="$event.stopPropagation()">
-            
-            <!-- Header -->
-            <div class="flex items-center justify-between p-4 border-b border-gray-700">
-              <h2 class="text-xl font-semibold text-white">Settings</h2>
-              <button (click)="isSettingsOpen.set(false)" title="Close Settings" class="p-1 rounded-full text-gray-400 hover:bg-gray-700 hover:text-white transition-colors">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-            
-            <!-- Body -->
-            <div class="p-6 space-y-6">
-              <div>
-                <h3 class="text-lg font-medium text-cyan-400">AI Model Configuration</h3>
-                <p class="text-sm text-gray-400 mt-1">Select a model for translation or provide a custom model name.</p>
-              </div>
-              
-              <div class="space-y-2">
-                  <label for="model-select" class="block text-sm font-medium text-gray-300">Translation Model</label>
-                  <select id="model-select" (change)="onModelSelectionChange($event)" class="w-full bg-gray-700 border-gray-600 text-white rounded-lg p-2.5 focus:ring-cyan-500 focus:border-cyan-500">
-                      @for(model of settingsService.availableModels; track model.id) {
-                          <option [value]="model.id" [selected]="settingsService.activeModel() === model.id && !isCustomModelActive()">{{ model.name }}</option>
-                      }
-                      <option value="custom" [selected]="isCustomModelActive()">Custom model...</option>
-                  </select>
-              </div>
-
-              @if (isCustomModelActive()) {
-                  <div class="space-y-2 animate-fade-in">
-                      <label for="custom-model-input" class="block text-sm font-medium text-gray-300">Custom Model Name</label>
-                      <input id="custom-model-input" type="text" [value]="settingsService.activeModel()" (input)="onCustomModelChange($event)" placeholder="e.g. models/gemini-1.5-pro-latest" class="w-full bg-gray-700 border-gray-600 text-white rounded-lg p-2.5 focus:ring-cyan-500 focus:border-cyan-500">
-                      <p class="text-xs text-gray-500">Note: The custom model must be compatible with the Google AI API and your API key permissions.</p>
-                  </div>
-              }
-            </div>
-            
-            <!-- Footer -->
-            <div class="flex justify-end p-4 bg-gray-800 border-t border-gray-700 rounded-b-2xl">
-              <button (click)="isSettingsOpen.set(false)" class="px-5 py-2 bg-cyan-600 hover:bg-cyan-700 rounded-lg text-white font-semibold transition-colors">Done</button>
-            </div>
-          </div>
-        </div>
-      }
+      <app-settings-modal
+        [isOpen]="isSettingsOpen()"
+        (close)="isSettingsOpen.set(false)"
+      ></app-settings-modal>
     </div>
   `,
   styles: [
@@ -310,25 +150,9 @@ export class AppComponent {
   isRecordingUnsupported = computed(() => this.audioRecordingService.error()?.includes('not supported'));
   isTranscriptListEmpty = computed(() => this.transcripts().length === 0);
 
-  // --- Settings --- //
-  settingsService = inject(SettingsService);
   isSettingsOpen = signal(false);
-
-  // A signal to hold the value of the custom model input temporarily when 'Custom...' is selected.
-  private customModelInputValue = signal('');
-
-  // Determines if the custom model option is the active one.
-  isCustomModelActive = computed(() => {
-    const active = this.settingsService.activeModel();
-    return !this.settingsService.availableModels.some(m => m.id === active);
-  });
   
   constructor() {
-    // When component initializes, if the active model is custom,
-    // populate the temporary input value signal.
-    if (this.isCustomModelActive()) {
-      this.customModelInputValue.set(this.settingsService.activeModel());
-    }
 
     // Effect to handle new transcribed sentences from audio service
     effect(() => {
@@ -368,6 +192,8 @@ export class AppComponent {
 
     this.transcripts.update(current => [newEntry, ...current]);
     
+    console.log(`Processing new transcript: "${text}"`);
+    
     const translationPromises = [
       this.geminiService.translateText(text, this.sourceLang().name, primaryTarget.name).catch(e => {
           console.error(`Primary translation failed for "${text}"`, e);
@@ -406,33 +232,17 @@ export class AppComponent {
     );
   }
 
-  setSourceLang(event: Event) {
-    const langName = (event.target as HTMLSelectElement).value;
-    const lang = this.languages.find(l => l.name === langName);
-    if (lang) {
-      this.sourceLang.set(lang);
-      this.audioRecordingService.setLanguage(lang.code);
-    }
+  setSourceLang(lang: Language) {
+    this.sourceLang.set(lang);
+    this.audioRecordingService.setLanguage(lang.code);
   }
   
-  setTargetLang(event: Event) {
-    const langName = (event.target as HTMLSelectElement).value;
-    const lang = this.languages.find(l => l.name === langName);
-    if (lang) {
-      this.targetLang.set(lang);
-    }
+  setTargetLang(lang: Language) {
+    this.targetLang.set(lang);
   }
 
-  setSecondaryTargetLang(event: Event) {
-    const langName = (event.target as HTMLSelectElement).value;
-    if (langName === 'None') {
-        this.secondaryTargetLang.set(null);
-    } else {
-        const lang = this.languages.find(l => l.name === langName);
-        if (lang) {
-            this.secondaryTargetLang.set(lang);
-        }
-    }
+  setSecondaryTargetLang(lang: Language | null) {
+    this.secondaryTargetLang.set(lang);
   }
 
   swapLanguages() {
@@ -516,25 +326,5 @@ export class AppComponent {
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
     }
-  }
-
-  //--- Settings Modal Methods ---//
-
-  onModelSelectionChange(event: Event) {
-    const selectedValue = (event.target as HTMLSelectElement).value;
-    if (selectedValue === 'custom') {
-      // When user selects 'Custom...', switch to it.
-      // If there's already a custom value, use it, otherwise use an empty string to let them type.
-      this.settingsService.activeModel.set(this.customModelInputValue());
-    } else {
-      // Switch to a pre-defined model
-      this.settingsService.activeModel.set(selectedValue);
-    }
-  }
-
-  onCustomModelChange(event: Event) {
-    const customModelName = (event.target as HTMLInputElement).value;
-    this.customModelInputValue.set(customModelName);
-    this.settingsService.activeModel.set(customModelName);
   }
 }

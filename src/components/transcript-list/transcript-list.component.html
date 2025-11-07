@@ -1,0 +1,51 @@
+<div class="w-full space-y-4 h-96 overflow-y-auto pr-2">
+  @for (transcript of transcripts; track transcript.id) {
+    <div class="bg-gray-700/50 p-4 rounded-lg animate-fade-in space-y-3">
+       <p class="text-xs text-gray-400 font-mono">{{ transcript.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }}</p>
+       <div [class]="'grid grid-cols-1 gap-4 ' + (transcript.secondaryTargetLang ? 'md:grid-cols-3' : 'md:grid-cols-2')">
+          <!-- Source Text -->
+          <div class="flex items-start gap-3">
+            <span class="text-cyan-400 font-bold text-sm mt-1 flex-shrink-0">{{ sourceLang.code.split('-')[0].toUpperCase() }}:</span>
+            <p class="text-gray-200">{{ transcript.source }}</p>
+          </div>
+          <!-- Primary Translated Text -->
+          <div class="flex items-start gap-3 border-t border-gray-600 pt-4 md:border-t-0 md:border-l md:pl-4 md:pt-0">
+            <span class="text-lime-400 font-bold text-sm mt-1 flex-shrink-0">{{ targetLang.code.split('-')[0].toUpperCase() }}:</span>
+            @if (transcript.isTranslatingPrimary) {
+              <div class="flex items-center gap-2 text-gray-400 pt-1">
+                <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-300"></div>
+                <span>Translating...</span>
+              </div>
+            } @else {
+              <p class="text-gray-200">{{ transcript.primaryTranslation }}</p>
+            }
+          </div>
+           <!-- Secondary Translated Text -->
+            @if (transcript.secondaryTargetLang) {
+                <div class="flex items-start gap-3 border-t border-gray-600 pt-4 md:border-t-0 md:border-l md:pl-4 md:pt-0">
+                    <span class="text-yellow-400 font-bold text-sm mt-1 flex-shrink-0">{{ transcript.secondaryTargetLang.code.split('-')[0].toUpperCase() }}:</span>
+                    @if (transcript.isTranslatingSecondary) {
+                    <div class="flex items-center gap-2 text-gray-400 pt-1">
+                        <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-300"></div>
+                        <span>Translating...</span>
+                    </div>
+                    } @else {
+                    <p class="text-gray-200">{{ transcript.secondaryTranslation }}</p>
+                    }
+                </div>
+            }
+       </div>
+    </div>
+  } @empty {
+    @if (!isRecording) {
+      <div class="text-center py-12 text-gray-500">
+        <svg xmlns="http://www.w3.org/2000/svg" class="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2" />
+        </svg>
+        <p class="mt-4 text-lg">Your translated notes will appear here.</p>
+        <p>Click the microphone above to begin.</p>
+      </div>
+    }
+  }
+</div>

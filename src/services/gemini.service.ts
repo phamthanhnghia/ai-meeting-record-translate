@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
 import { SettingsService } from './settings.service';
+import { environment } from '../environments/environment';
 
 @Injectable({
   providedIn: 'root'
@@ -10,11 +11,11 @@ export class GeminiService {
   private settingsService = inject(SettingsService);
 
   constructor() {
-    // IMPORTANT: This relies on the `process.env.API_KEY` being available in the execution environment.
-    if (!process.env.API_KEY) {
+    const apiKey = environment.googleGenAIKey;
+    if (!apiKey) {
         throw new Error("API_KEY environment variable not set.");
     }
-    this.ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    this.ai = new GoogleGenAI({ apiKey });
   }
 
   async translateText(text: string, sourceLang: string, targetLang: string): Promise<string> {

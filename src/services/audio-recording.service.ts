@@ -80,6 +80,7 @@ export class AudioRecordingService {
         this.transcribedText.set(''); 
         this.recognition.start();
       } catch(e) {
+        console.error('An error occurred while starting the recording:', e);
         this.error.set('Recording could not be started.');
         this.isRecording.set(false);
         this.intentionallyStopped = true;

@@ -1,33 +1,50 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "experimentalDecorators": true,
-    "useDefineForClassFields": false,
     "module": "ESNext",
     "lib": [
       "ES2022",
       "DOM",
       "DOM.Iterable"
     ],
+    "baseUrl": "./", 
     "skipLibCheck": true,
+    "allowJs": true,
+    
+    // Cấu hình Bundler/Vite
+    "moduleResolution": "bundler", 
+    "isolatedModules": true,
+    "moduleDetection": "force",
+    
+    // Cấu hình Angular
+    "experimentalDecorators": true, 
+    "useDefineForClassFields": false, 
+    
+    // THIẾT LẬP CẦN THIẾT ĐỂ XỬ LÝ index.tsx
+    "jsx": "react-jsx", // Cho phép TypeScript xử lý cú pháp JSX/TSX
+    
     "types": [
       "node"
     ],
-    "moduleResolution": "bundler",
-    "isolatedModules": true,
-    "moduleDetection": "force",
-    "allowJs": true,
-    "jsx": "react-jsx",
+    
+    // Path Mapping (Bí danh)
     "paths": {
       "@/*": [
-        "./*"
+        "src/*" 
       ]
     }
   },
   "files": [
-    "./index.tsx"
+    "./index.tsx" // GIỮ LẠI: File entry point do AI Studio quy định
+  ],
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.d.ts"
   ],
   "angularCompilerOptions": {
-    "disableTypeScriptVersionCheck": true
+    "enableI18nLegacyMessageIdFormat": false,
+    "strictInjectionParameters": true,
+    "strictInputAccessModifiers": true,
+    "strictTemplates": true
   }
 }

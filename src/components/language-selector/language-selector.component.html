@@ -1,0 +1,38 @@
+<div class="flex flex-col items-center justify-between mb-6 gap-4">
+  <div class="w-full flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div class="w-full sm:w-5/12">
+        <label for="source-lang" class="block text-sm font-medium text-gray-300 mb-1">From (Spoken)</label>
+        <select id="source-lang" [value]="sourceLang.name" (change)="onSourceLangChange($event)" class="w-full bg-gray-700 border-gray-600 text-white rounded-lg p-2.5 focus:ring-cyan-500 focus:border-cyan-500">
+          @for (lang of languages; track lang.code) {
+            <option [value]="lang.name">{{ lang.name }}</option>
+          }
+        </select>
+      </div>
+      
+      <button (click)="onSwapLanguages()" class="p-2 rounded-full bg-gray-700 hover:bg-cyan-600 transition-transform duration-300 transform sm:mt-6 rotate-90 sm:rotate-0">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+        </svg>
+      </button>
+      
+      <div class="w-full sm:w-5/12">
+        <label for="target-lang" class="block text-sm font-medium text-gray-300 mb-1">To (Translated)</label>
+        <select id="target-lang" [value]="targetLang.name" (change)="onTargetLangChange($event)" class="w-full bg-gray-700 border-gray-600 text-white rounded-lg p-2.5 focus:ring-cyan-500 focus:border-cyan-500">
+          @for (lang of languages; track lang.code) {
+            <option [value]="lang.name">{{ lang.name }}</option>
+          }
+        </select>
+      </div>
+  </div>
+  <!-- Optional Secondary Language -->
+    <div class="mt-4 w-full sm:w-1/2">
+        <label for="secondary-target-lang" class="block text-sm font-medium text-gray-300 mb-1">
+            Also Translate To (Optional)
+        </label>
+        <select id="secondary-target-lang" (change)="onSecondaryTargetLangChange($event)" class="w-full bg-gray-700 border-gray-600 text-white rounded-lg p-2.5 focus:ring-cyan-500 focus:border-cyan-500">
+            @for (lang of optionalLanguages; track lang.code) {
+                <option [value]="lang.name" [selected]="secondaryTargetLang?.name === lang.name">{{ lang.name }}</option>
+            }
+        </select>
+    </div>
+</div>
